@@ -282,5 +282,11 @@
   "C_Cpp_Runner.useLeakSanitizer": false,
   "C_Cpp_Runner.showCompilationTime": false,
   "C_Cpp_Runner.useLinkTimeOptimization": false,
-  "C_Cpp_Runner.msvcSecureNoWarnings": false
+  "C_Cpp_Runner.msvcSecureNoWarnings": false,
+  "files.associations": {
+    "esp_task_wdt.h": "c",
+    "esp32-hal.h": "c",
+    "random": "cpp",
+    "new": "cpp"
+  }
 }
