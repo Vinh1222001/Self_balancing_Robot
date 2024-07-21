@@ -1,4 +1,4 @@
-#include "oled_display.hpp"
+#include "display_controller.hpp"
 
 // Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define MENU_SCREEN_ID        0

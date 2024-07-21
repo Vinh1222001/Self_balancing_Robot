@@ -2,32 +2,28 @@
 
 // USER INCLUDE SCOPE
 #include "pins_define.hpp"
-#include "oled_display.hpp"
-#include "button.hpp"
+#include "display_controller.hpp"
 #include "global.hpp"
 
+#include "mpu_reader.hpp"
 
 
 void setup() {
   Serial.begin(115200);
 
-  // init_ctrl_btn(btn_OK);
-  // init_ctrl_btn(btn_ESC);
-  // init_ctrl_btn(btn_UP);
-  // init_ctrl_btn(btn_DOWN);
+  while (!Serial)
+  {
+    delay(10);
+  }
+  
 
-  // attach_btn_interrupt(&btn_OK);
-  // attach_btn_interrupt(&btn_ESC);
-  // attach_btn_interrupt(&btn_UP);
-  // attach_btn_interrupt(&btn_DOWN);
+  // init_display(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-  // xMutex_menu_curr_opt = xSemaphoreCreateMutex();
+  // menu_start();
 
-  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  init_mpu_reader();
 
-  init_display(SCREEN_WIDTH, SCREEN_HEIGHT);
-
-  menu_start();
+  xTaskCreatePinnedToCore(mpu_reading, "mpu_reading", 2048, nullptr, 5,nullptr, 0);
 
 }
 

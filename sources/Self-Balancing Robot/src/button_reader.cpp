@@ -1,4 +1,4 @@
-#include "button.hpp"
+#include "button_reader.hpp"
 
 Button btn_OK = {BTN_OK, false, 0, 0};
 Button btn_ESC = {BTN_ESC, false, 0, 0};

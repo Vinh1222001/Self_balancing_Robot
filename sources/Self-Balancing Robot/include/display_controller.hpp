@@ -8,7 +8,7 @@
 #include <Adafruit_SSD1306.h>
 #include <Arduino.h>
 
-#include "button.hpp"
+#include "button_reader.hpp"
 #include "global.hpp"
 
 #define SCREEN_WIDTH 128

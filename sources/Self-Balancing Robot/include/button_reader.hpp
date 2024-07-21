@@ -1,6 +1,6 @@
 #pragma once
-#ifndef BUTTON_HPP
-#define BUTTON_HPP
+#ifndef BUTTON_READER_HPP
+#define BUTTON_READER_HPP
 
 #include <Arduino.h>
 
