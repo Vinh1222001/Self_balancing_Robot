@@ -10,6 +10,8 @@
 
 #include "button_reader.hpp"
 #include "global.hpp"
+#include "UI_tree.hpp"
+#include "center_controller.hpp"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64

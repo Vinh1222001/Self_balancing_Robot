@@ -35,3 +35,16 @@ void attach_btn_interrupt(Button* btn){
 
     attachInterruptArg(btn->PIN, handleButtonPress, btn, FALLING);
 }
+
+void button_init(void){
+  // Initialize buttons and attach them to Interrupt
+  init_ctrl_btn(btn_OK);
+  init_ctrl_btn(btn_ESC);
+  init_ctrl_btn(btn_UP);
+  init_ctrl_btn(btn_DOWN);
+
+  attach_btn_interrupt(&btn_OK);
+  attach_btn_interrupt(&btn_ESC);
+  attach_btn_interrupt(&btn_UP);
+  attach_btn_interrupt(&btn_DOWN);
+}

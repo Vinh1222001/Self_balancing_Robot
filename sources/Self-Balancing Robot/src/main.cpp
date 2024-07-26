@@ -6,7 +6,8 @@
 #include "global.hpp"
 
 #include "mpu_reader.hpp"
-
+#include "motor_controller.hpp"
+#include "center_controller.hpp"
 
 void setup() {
   Serial.begin(115200);
@@ -17,13 +18,17 @@ void setup() {
   }
   
 
-  // init_display(SCREEN_WIDTH, SCREEN_HEIGHT);
+  init_display(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-  // menu_start();
+  button_init();
 
-  init_mpu_reader();
+  center_controller_init();
+  
+  menu_start();
 
-  xTaskCreatePinnedToCore(mpu_reading, "mpu_reading", 2048, nullptr, 5,nullptr, 0);
+  // init_mpu_reader();
+
+  // xTaskCreatePinnedToCore(mpu_reading, "mpu_reading", 2048, nullptr, 5,nullptr, 0);
 
 }
 

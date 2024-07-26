@@ -25,6 +25,8 @@ void IRAM_ATTR handleButtonPress(void* arg);
 
 void attach_btn_interrupt(Button* btn);
 
+void button_init(void);
+
 extern Button btn_OK; 
 extern Button btn_ESC; 
 extern Button btn_UP; 
