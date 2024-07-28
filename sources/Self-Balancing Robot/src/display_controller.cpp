@@ -32,6 +32,8 @@
 
 Adafruit_SSD1306* display;
 
+const uint8_t fps = 30;
+
 UI_tree* current_UI;
 
 SemaphoreHandle_t  xMutex_menu_curr_opt;
@@ -43,7 +45,7 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
     uint8_t args_len = 1;
     uint8_t nextUI_len = 2;
     void display_func(){
-
+      
       if (current_UI->args[0] == MENU_START_N_PLOT_OPTION)
       {
         display->setTextColor(BLACK, WHITE);
@@ -111,7 +113,34 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
     uint8_t nextUI_len = 0;
 
     void display_func(){
-      display->printf("This is start and plot screen");
+
+      static struct_mpu_reader mpu_values = {1,1,1};
+
+      if(xQueueReceive(q_mpu_values, &mpu_values, (fps/1000)/portTICK_PERIOD_MS) == pdTRUE){
+
+        display->print("Roll = ");
+        display->print(mpu_values.roll*180/M_PI);
+        display->println(" degree");
+        display->print("Pitch = ");
+        display->print(mpu_values.pitch*180/M_PI);
+        display->println(" degree");
+        display->print("Yaw = ");
+        display->print(mpu_values.yaw*180/M_PI);
+        display->println(" degree");
+        
+      }else{
+
+        display->print("Roll = ");
+        display->print(mpu_values.roll*180/M_PI);
+        display->println(" degree");
+        display->print("Pitch = ");
+        display->print(mpu_values.pitch*180/M_PI);
+        display->println(" degree");
+        display->print("Yaw = ");
+        display->print(mpu_values.yaw*180/M_PI);
+        display->println(" degree");
+      }
+
 
     }
 
@@ -645,7 +674,10 @@ void draw_menu(void* arg){
 
       display->setCursor((display->width()-current_UI->title.length()*6)/2,0); 
     }
-    display->printf("-%s-\n",current_UI->title);
+    display->print("-");
+    display->print(current_UI->title);
+    display->println("-");
+
 
     display->setTextSize(1);
     
@@ -658,7 +690,7 @@ void draw_menu(void* arg){
 
     display->display();
 
-    vTaskDelay((30/1000)/portTICK_PERIOD_MS);
+    vTaskDelay((fps/1000)/portTICK_PERIOD_MS);
   }
 }
 

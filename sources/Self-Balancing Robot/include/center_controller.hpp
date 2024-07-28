@@ -8,6 +8,10 @@ struct center_controller_struct
     double Kp;
     double Ki;
     double Kd;
+
+    // float pitch;
+    // float roll;
+    // float yaw;
 };
 
 extern SemaphoreHandle_t xMutex_center_controller;

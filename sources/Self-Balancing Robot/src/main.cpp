@@ -26,9 +26,9 @@ void setup() {
   
   menu_start();
 
-  // init_mpu_reader();
+  init_mpu_reader();
 
-  // xTaskCreatePinnedToCore(mpu_reading, "mpu_reading", 2048, nullptr, 5,nullptr, 0);
+  xTaskCreatePinnedToCore(mpu_reading, "mpu_reading", 2048, nullptr, 5,nullptr, 1);
 
 }
 

@@ -13,12 +13,15 @@
 #include "UI_tree.hpp"
 #include "center_controller.hpp"
 
+#include "mpu_reader.hpp"
+
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 // extern Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
 extern Adafruit_SSD1306* display;
 
 void init_display(int scr_w, int scr_h);
