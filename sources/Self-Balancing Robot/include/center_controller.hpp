@@ -3,20 +3,29 @@
 #define CENTER_CONTROLLER_HPP
 
 #include <Arduino.h>
-struct center_controller_struct
+#include "mpu_reader.hpp"
+
+struct struct_PID_parameters
 {
     double Kp;
     double Ki;
     double Kd;
-
-    // float pitch;
-    // float roll;
-    // float yaw;
 };
 
-extern SemaphoreHandle_t xMutex_center_controller;
+struct struct_angle_values{
+    float pitch;
+    float yaw;
+};
 
-extern center_controller_struct center_controller;
+extern SemaphoreHandle_t xMutex_PID_parameters;
+
+extern struct_PID_parameters center_controller;
+
+extern QueueHandle_t q_angle_values;
+
+extern struct_angle_values angles_value;
 
 void center_controller_init();
+
+void center_controller_run();
 #endif

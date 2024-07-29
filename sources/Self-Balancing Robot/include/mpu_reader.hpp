@@ -10,15 +10,15 @@
 extern Adafruit_MPU6050* mpu_reader;
 
 struct struct_mpu_reader{
-    float roll;
-    float pitch;
-    float yaw;
+    // float roll;
+    sensors_vec_t accel;
+    sensors_vec_t gyro;
 };
 
 extern QueueHandle_t q_mpu_values;
 
-void init_mpu_reader(void);
+void mpu_reader_init(void);
 
-void mpu_reading(void* arg);
+void mpu_reader_run();
 
 #endif

@@ -24,11 +24,14 @@ void setup() {
 
   center_controller_init();
   
-  menu_start();
+  mpu_reader_init();
 
-  init_mpu_reader();
+  mpu_reader_run();
 
-  xTaskCreatePinnedToCore(mpu_reading, "mpu_reading", 2048, nullptr, 5,nullptr, 1);
+  center_controller_run();
+
+  menu_run();
+
 
 }
 

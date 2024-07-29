@@ -33,6 +33,6 @@ void get_btn_DOWN(void* arg);
 
 void draw_menu(void* arg);
 
-void menu_start();
+void menu_run();
 
 #endif

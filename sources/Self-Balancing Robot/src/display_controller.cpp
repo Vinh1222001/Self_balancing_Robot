@@ -114,33 +114,65 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
 
     void display_func(){
 
-      static struct_mpu_reader mpu_values = {1,1,1};
+      static struct_angle_values angle_values;
 
-      if(xQueueReceive(q_mpu_values, &mpu_values, (fps/1000)/portTICK_PERIOD_MS) == pdTRUE){
+      if(xQueueReceive(q_angle_values, &angle_values, (fps/1000)/portTICK_PERIOD_MS) == pdTRUE){
 
-        display->print("Roll = ");
-        display->print(mpu_values.roll*180/M_PI);
-        display->println(" degree");
         display->print("Pitch = ");
-        display->print(mpu_values.pitch*180/M_PI);
+        display->print(angle_values.pitch*180/M_PI);
         display->println(" degree");
         display->print("Yaw = ");
-        display->print(mpu_values.yaw*180/M_PI);
+        display->print(angle_values.yaw*180/M_PI);
         display->println(" degree");
         
       }else{
 
-        display->print("Roll = ");
-        display->print(mpu_values.roll*180/M_PI);
-        display->println(" degree");
         display->print("Pitch = ");
-        display->print(mpu_values.pitch*180/M_PI);
+        display->print(angle_values.pitch*180/M_PI);
         display->println(" degree");
         display->print("Yaw = ");
-        display->print(mpu_values.yaw*180/M_PI);
+        display->print(angle_values.yaw*180/M_PI);
         display->println(" degree");
       }
 
+      // static struct_mpu_reader mpu_value;
+
+      // if(xQueueReceive(q_mpu_values, &mpu_value, (fps/1000)/portTICK_PERIOD_MS) == pdTRUE){
+
+      //   display->println("Accelerometer - m/s^2");
+      //   display->print(mpu_value.accel.x, 2);
+      //   display->print(", ");
+      //   display->print(mpu_value.accel.y, 2);
+      //   display->print(", ");
+      //   display->print(mpu_value.accel.z, 2);
+      //   display->println("");
+
+      //   display->println("Gyroscope - rps");
+      //   display->print(mpu_value.gyro.x, 2);
+      //   display->print(", ");
+      //   display->print(mpu_value.gyro.y, 2);
+      //   display->print(", ");
+      //   display->print(mpu_value.gyro.z, 2);
+      //   display->println("");
+        
+      // }else{
+
+      //   display->println("Accelerometer - m/s^2");
+      //   display->print(mpu_value.accel.x, 1);
+      //   display->print(", ");
+      //   display->print(mpu_value.accel.y, 1);
+      //   display->print(", ");
+      //   display->print(mpu_value.accel.z, 1);
+      //   display->println("");
+
+      //   display->println("Gyroscope - rps");
+      //   display->print(mpu_value.gyro.x, 1);
+      //   display->print(", ");
+      //   display->print(mpu_value.gyro.y, 1);
+      //   display->print(", ");
+      //   display->print(mpu_value.gyro.z, 1);
+      //   display->println("");
+      // }
 
     }
 
@@ -170,10 +202,10 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
         display->setTextColor(WHITE, BLACK);
       }      
 
-      if(xSemaphoreTake(xMutex_center_controller, portMAX_DELAY) == pdTRUE){
+      if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
         display->printf("Kp = %.2f\n", center_controller.Kp);
-        xSemaphoreGive(xMutex_center_controller);
+        xSemaphoreGive(xMutex_PID_parameters);
       }
       
       if (current_UI->args[0] == PID_PARAMETERS_MODIFY_KI)
@@ -183,10 +215,10 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
         display->setTextColor(WHITE, BLACK);
       }
 
-      if(xSemaphoreTake(xMutex_center_controller, portMAX_DELAY) == pdTRUE){
+      if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
         display->printf("Ki = %.2f\n", center_controller.Ki);
-        xSemaphoreGive(xMutex_center_controller);
+        xSemaphoreGive(xMutex_PID_parameters);
       }  
 
       if (current_UI->args[0] == PID_PARAMETERS_MODIFY_KD)
@@ -196,10 +228,10 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
         display->setTextColor(WHITE, BLACK);
       }
 
-      if(xSemaphoreTake(xMutex_center_controller, portMAX_DELAY) == pdTRUE){
+      if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
         display->printf("Kd = %.2f\n", center_controller.Kd);
-        xSemaphoreGive(xMutex_center_controller);
+        xSemaphoreGive(xMutex_PID_parameters);
       }  
 
     }
@@ -287,11 +319,11 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
 
     void btnOK_func(){
       
-      if(xSemaphoreTake(xMutex_center_controller, portMAX_DELAY) == pdTRUE){
+      if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
         center_controller.Kp = (double)args[0];
 
-        xSemaphoreGive(xMutex_center_controller);
+        xSemaphoreGive(xMutex_PID_parameters);
       }
     }
 
@@ -345,11 +377,11 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
 
     void btnOK_func(){
       
-      if(xSemaphoreTake(xMutex_center_controller, portMAX_DELAY) == pdTRUE){
+      if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
         center_controller.Ki = (double)args[0];
 
-        xSemaphoreGive(xMutex_center_controller);
+        xSemaphoreGive(xMutex_PID_parameters);
       }
     }
 
@@ -403,11 +435,11 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
 
     void btnOK_func(){
       
-      if(xSemaphoreTake(xMutex_center_controller, portMAX_DELAY) == pdTRUE){
+      if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
         center_controller.Kd = (double)args[0];
 
-        xSemaphoreGive(xMutex_center_controller);
+        xSemaphoreGive(xMutex_PID_parameters);
       }
     }
 
@@ -698,11 +730,42 @@ void draw_menu(void* arg){
  * @brief - menu_start() will be called in setup() in main.cpp.
  *        - It will create all tasks need to run the display.
  */
-void menu_start(){
-  xTaskCreatePinnedToCore(get_btn_OK,"get_btn_OK", 2048, nullptr, 6, nullptr, 0);
-  xTaskCreatePinnedToCore(get_btn_ESC,"get_btn_ESC", 2048, nullptr, 6, nullptr, 0);
-  xTaskCreatePinnedToCore(get_btn_UP,"get_btn_UP", 2048, nullptr, 6, nullptr, 0);
-  xTaskCreatePinnedToCore(get_btn_DOWN,"get_btn_DOWN", 2048, nullptr, 6, nullptr, 0);
-  xTaskCreatePinnedToCore(draw_menu,"draw_menu", 2048, nullptr, 5, nullptr, 0);
+void menu_run(){
+
+  if(xTaskCreatePinnedToCore(get_btn_OK,"get_btn_OK", 2048, nullptr, 6, nullptr, 0) == pdPASS){
+    Serial.println("Created get_btn_OK task successfully!");
+  }else{
+    Serial.println("Created get_btn_OK task failed!");
+    while (true){}
+    
+  }
+  if(xTaskCreatePinnedToCore(get_btn_ESC,"get_btn_ESC", 2048, nullptr, 6, nullptr, 0) == pdPASS){
+    Serial.println("Created get_btn_ESC task successfully!");
+  }else{
+    Serial.println("Created get_btn_ESC task failed!");
+    while (true){}
+    
+  }
+  if(xTaskCreatePinnedToCore(get_btn_UP,"get_btn_UP", 2048, nullptr, 6, nullptr, 0) == pdPASS){
+    Serial.println("Created get_btn_UP task successfully!");
+  }else{
+    Serial.println("Created get_btn_UP task failed!");
+    while (true){}
+    
+  }
+  if(xTaskCreatePinnedToCore(get_btn_DOWN,"get_btn_DOWN", 2048, nullptr, 6, nullptr, 0) == pdPASS){
+    Serial.println("Created get_btn_DOWN task successfully!");
+  }else{
+    Serial.println("Created get_btn_DOWN task failed!");
+    while (true){}
+    
+  }
+  if(xTaskCreatePinnedToCore(draw_menu,"draw_menu", 2048, nullptr, 5, nullptr, 0) == pdPASS){
+    Serial.println("Created draw_menu task successfully!");
+  }else{
+    Serial.println("Created draw_menu task failed!");
+    while (true){}
+    
+  }
 
 }
