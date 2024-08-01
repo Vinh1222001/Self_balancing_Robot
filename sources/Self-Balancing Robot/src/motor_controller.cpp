@@ -22,6 +22,8 @@ SemaphoreHandle_t xMutex_curr_move_state;
 SemaphoreHandle_t xMutex_ENA_value;
 SemaphoreHandle_t xMutex_ENB_value;
 
+TaskHandle_t motor_controller_task_handle = nullptr; 
+
 void motor_write_state(uint8_t state){
 
     if(xSemaphoreTake(xMutex_curr_move_state, portMAX_DELAY) == pdTRUE){
@@ -37,6 +39,10 @@ void motor_write_state(uint8_t state){
         }
 
         xSemaphoreGive(xMutex_curr_move_state);
+        ESP_LOGI("MOTOR CONTROLLER", "Set moving state successfully\n");
+
+    }else{
+        ESP_LOGI("MOTOR CONTROLLER", "Can not set moving state\n");
     }
 
     
@@ -55,7 +61,7 @@ void motor_write_ENA(int value){
         }else{
             ENA_value = value;
         }
-
+        // Serial.println("Set ENA successfully");
         xSemaphoreGive(xMutex_ENA_value);
     }
 
@@ -76,22 +82,25 @@ void motor_write_ENB(int value){
             ENB_value = value;
         }
         
+        // Serial.println("Set ENB successfully");
+
         xSemaphoreGive(xMutex_ENB_value);
     }
 
 
 }
+
 void motor_write_both_EN(int value){
     motor_write_ENA(value);
     motor_write_ENB(value);
 }
 
-void motor_controller_run(void* arg){
+void motor_controller_task(void* arg){
 
     while (true)
     {
         if(xSemaphoreTake(xMutex_curr_move_state, portMAX_DELAY) == pdTRUE){
-            Serial.printf("current_movement_state = %d\n",current_movement_state);
+            // Serial.printf("current_movement_state = %d\n",current_movement_state);
 
             digitalWrite(MOTOR_IN1_PIN, motor_in_state[current_movement_state][IN1_SIGNAL_INDEX]);
             digitalWrite(MOTOR_IN2_PIN, motor_in_state[current_movement_state][IN2_SIGNAL_INDEX]);
@@ -100,36 +109,29 @@ void motor_controller_run(void* arg){
             xSemaphoreGive(xMutex_curr_move_state);
         }
         
-
-        for (int i = 0; i < 255; i++)
-        {
-            if(xSemaphoreTake(xMutex_ENA_value, portMAX_DELAY) == pdTRUE){
-
-                Serial.printf("MOTOR_ENA: %d\n", i);
-                analogWrite(MOTOR_ENA_PIN, ENA_value);
-
-                xSemaphoreGive(xMutex_ENA_value);
-            }
+        if(xSemaphoreTake(xMutex_ENA_value, portMAX_DELAY) == pdTRUE){
             
-            vTaskDelay(100/portTICK_PERIOD_MS);
-        }
-        for (int i = 0; i < 255; i++)
-        {
-            if(xSemaphoreTake(xMutex_ENB_value, portMAX_DELAY) == pdTRUE){
+            analogWrite(MOTOR_ENA_PIN, ENA_value);
 
-                Serial.printf("MOTOR_ENB: %d\n", i);
-                analogWrite(MOTOR_ENB_PIN, ENB_value);
-                
-                xSemaphoreGive(xMutex_ENB_value);
-            }
-            vTaskDelay(100/portTICK_PERIOD_MS);
+            xSemaphoreGive(xMutex_ENA_value);
         }
-        Serial.printf("\n");
+        
+        if(xSemaphoreTake(xMutex_ENB_value, portMAX_DELAY) == pdTRUE){
+
+            analogWrite(MOTOR_ENB_PIN, ENB_value);
+            
+            xSemaphoreGive(xMutex_ENB_value);
+        }
+        vTaskDelay((10)/portTICK_PERIOD_MS);
+
+
+        // Serial.printf("\n");
     }
     
 }
 
 void motor_controller_init(void){
+
     pinMode(MOTOR_IN1_PIN, OUTPUT);
     pinMode(MOTOR_IN2_PIN, OUTPUT);
     pinMode(MOTOR_IN3_PIN, OUTPUT);
@@ -141,8 +143,50 @@ void motor_controller_init(void){
     xMutex_curr_move_state = xSemaphoreCreateMutex();
     xMutex_ENA_value = xSemaphoreCreateMutex();
     xMutex_ENB_value = xSemaphoreCreateMutex();
+
+    motor_write_state(MOVE_STOP);
+    motor_write_both_EN(0);
+
+    Serial.println("MOTOR CONTROLLER, initialized successfully!");
+
 }
 
-void motor_controller_start(void){
-    xTaskCreatePinnedToCore(motor_controller_run, "motor_controller_run", 2024, nullptr, 5, nullptr, 0);
+void motor_controller_run(void){
+    Serial.print("In motor controller component, ");
+    if(xTaskCreatePinnedToCore(motor_controller_task, "motor_controller_task", 2024, nullptr, 5, &motor_controller_task_handle, 0)==pdPASS){
+        Serial.println("Created motor_controller_task() task successfully!");
+    }else{
+        Serial.println("Create motor_controller_task() task failed!");
+    }
+
+}
+
+void motor_stop(){
+
+    if(xSemaphoreTake(xMutex_curr_move_state, portMAX_DELAY) == pdTRUE){
+        current_movement_state = MOVE_STOP;
+        digitalWrite(MOTOR_IN1_PIN, motor_in_state[current_movement_state][IN1_SIGNAL_INDEX]);
+        digitalWrite(MOTOR_IN2_PIN, motor_in_state[current_movement_state][IN2_SIGNAL_INDEX]);
+        digitalWrite(MOTOR_IN3_PIN, motor_in_state[current_movement_state][IN3_SIGNAL_INDEX]);
+        digitalWrite(MOTOR_IN4_PIN, motor_in_state[current_movement_state][IN4_SIGNAL_INDEX]);
+        xSemaphoreGive(xMutex_curr_move_state);
+    }
+    
+    if(xSemaphoreTake(xMutex_ENA_value, portMAX_DELAY) == pdTRUE){
+        
+        ENA_value = 0;
+
+        analogWrite(MOTOR_ENA_PIN, ENA_value);
+
+        xSemaphoreGive(xMutex_ENA_value);
+    }
+    
+    if(xSemaphoreTake(xMutex_ENB_value, portMAX_DELAY) == pdTRUE){
+
+        ENB_value = 0;
+
+        analogWrite(MOTOR_ENB_PIN, ENB_value);
+        
+        xSemaphoreGive(xMutex_ENB_value);
+    }
 }

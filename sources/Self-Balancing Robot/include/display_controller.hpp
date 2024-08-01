@@ -12,7 +12,7 @@
 #include "global.hpp"
 #include "UI_tree.hpp"
 #include "center_controller.hpp"
-
+#include "PID_block.hpp"
 #include "mpu_reader.hpp"
 
 #define SCREEN_WIDTH 128

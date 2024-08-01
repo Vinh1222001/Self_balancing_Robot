@@ -18,11 +18,16 @@
 #define MOVE_RIGHT      3
 #define MOVE_STOP       4
 
+extern TaskHandle_t motor_controller_task_handle; 
+
 void motor_controller_init(void);
-void motor_controller_start(void);
+void motor_controller_run(void);
+
 
 void motor_write_state(uint8_t state);
 void motor_write_ENA(int value);
 void motor_write_ENB(int value);
 void motor_write_both_EN(int value);
+
+void motor_stop();
 #endif

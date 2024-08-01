@@ -98,6 +98,7 @@ void mpu_reader_init(void){
     // q_mpu_values = xQueueCreate(20, sizeof(struct_mpu_reader));
     q_mpu_values = xQueueCreate(20, sizeof(struct_mpu_reader));
     
+    Serial.println("MPU READER, Initialized successfully");
 }
 
 void mpu_reading(void* arg){
@@ -109,31 +110,31 @@ void mpu_reading(void* arg){
         if(mpu_accel->getEvent(&accel)){
             // Serial.println("get mpu values done!");
             mpu_values.accel = accel.acceleration;
-            Serial.print("\t\tAccel X: ");
-            Serial.print(accel.acceleration.x);
-            Serial.print(" \tY: ");
-            Serial.print(accel.acceleration.y);
-            Serial.print(" \tZ: ");
-            Serial.print(accel.acceleration.z);
-            Serial.println(" m/s^2 ");
+            // Serial.print("\t\tAccel X: ");
+            // Serial.print(accel.acceleration.x);
+            // Serial.print(" \tY: ");
+            // Serial.print(accel.acceleration.y);
+            // Serial.print(" \tZ: ");
+            // Serial.print(accel.acceleration.z);
+            // Serial.println(" m/s^2 ");
         }
 
         if(mpu_gyro->getEvent(&gyro)){
             mpu_values.gyro = gyro.gyro;
-            Serial.print("\t\tGyro X: ");
-            Serial.print(gyro.gyro.x);
-            Serial.print(" \tY: ");
-            Serial.print(gyro.gyro.y);
-            Serial.print(" \tZ: ");
-            Serial.print(gyro.gyro.z);
-            Serial.println(" radians/s ");
-            Serial.println();
+            // Serial.print("\t\tGyro X: ");
+            // Serial.print(gyro.gyro.x);
+            // Serial.print(" \tY: ");
+            // Serial.print(gyro.gyro.y);
+            // Serial.print(" \tZ: ");
+            // Serial.print(gyro.gyro.z);
+            // Serial.println(" radians/s ");
+            // Serial.println();
         }
 
-        if(xQueueSend(q_mpu_values, &mpu_values, (30/1000)/portTICK_PERIOD_MS) == pdTRUE){
-            Serial.println("MPU values sent successfully");
+        if(xQueueSendToFront(q_mpu_values, &mpu_values, (dt*1000)/portTICK_PERIOD_MS) == pdTRUE){
+            // Serial.println("MPU values sent successfully");
         }else{
-            Serial.println("MPU values can't sent successfully");
+            // Serial.println("MPU values can't sent successfully");
         }
     
         vTaskDelay((dt*1000)/portTICK_PERIOD_MS);
@@ -143,7 +144,7 @@ void mpu_reading(void* arg){
 
 void mpu_reader_run(){
 
-    if(xTaskCreatePinnedToCore(mpu_reading, "mpu_reading", 4096, nullptr, 5,nullptr, 0) == pdPASS){
+    if(xTaskCreatePinnedToCore(mpu_reading, "mpu_reading", 4096, nullptr, 8,nullptr, 0) == pdPASS){
         Serial.println("Created mpu_reading task successfully");
     }else{
         Serial.println("Created mpu_reading task failed!");

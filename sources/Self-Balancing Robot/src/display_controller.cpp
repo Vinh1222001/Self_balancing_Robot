@@ -38,6 +38,10 @@ UI_tree* current_UI;
 
 SemaphoreHandle_t  xMutex_menu_curr_opt;
 
+struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
+                                        center_controller_PID_params.Ki,
+                                        center_controller_PID_params.Kd};
+
 #pragma region UN-NAME STRUCT FOR ALL UIS  
   struct{
     String title = "MENU";
@@ -86,12 +90,20 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
 
     void btnOK_func(){
       
-      
       if(current_UI->next_UI[current_UI->args[0]] != nullptr){
-        Serial.println("current_UI->next_UI[current_UI->args[0]] != nullptr");
+        // Serial.println("current_UI->next_UI[current_UI->args[0]] != nullptr");
+        if(args[0] == MENU_START_N_PLOT_OPTION){
+
+          if(xSemaphoreTake(xMutex_start_robot_flag, portMAX_DELAY) == pdTRUE){
+            start_robot_flag= true;
+            xSemaphoreGive(xMutex_start_robot_flag);
+          }
+
+        }
+
         current_UI = current_UI->next_UI[current_UI->args[0]];
       }else{
-        Serial.println("current_UI->next_UI[current_UI->args[0]] == nullptr");
+        // Serial.println("current_UI->next_UI[current_UI->args[0]] == nullptr");
       }
 
     }
@@ -114,26 +126,41 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
 
     void display_func(){
 
-      static struct_angle_values angle_values;
+      static PID_block PID_values;
 
-      if(xQueueReceive(q_angle_values, &angle_values, (fps/1000)/portTICK_PERIOD_MS) == pdTRUE){
+      // if(xQueueReceive(q_PID_values, &PID_values, fps/portTICK_PERIOD_MS) == pdTRUE){
 
-        display->print("Pitch = ");
-        display->print(angle_values.pitch*180/M_PI);
-        display->println(" degree");
-        display->print("Yaw = ");
-        display->print(angle_values.yaw*180/M_PI);
-        display->println(" degree");
+      //   display->print("Filted Pitch = ");
+      //   display->println(PID_values.filted_pitch);
+      //   // display->println(" degree");
+      //   display->print("Gyro angle Y = ");
+      //   display->println(PID_values.gyro_angle_Y);
+      //   display->print("Error = ");
+      //   display->println(PID_values.error);
+      //   display->print("Integral = ");
+      //   display->println(PID_values.integral);
+      //   display->print("Derivative = ");
+      //   display->println(PID_values.derivative);
+      //   display->print("Output = ");
+      //   display->println(PID_values.output);
         
-      }else{
-
-        display->print("Pitch = ");
-        display->print(angle_values.pitch*180/M_PI);
-        display->println(" degree");
-        display->print("Yaw = ");
-        display->print(angle_values.yaw*180/M_PI);
-        display->println(" degree");
-      }
+      // }else{
+      //   // ESP_LOGE("DISPLAY CONTROLLER", "Can't recieve angle values!\n");
+      //   display->print("Filted Pitch = ");
+      //   display->println(PID_values.filted_pitch);
+      //   // display->println(" degree");
+      //   display->print("Gyro angle Y = ");
+      //   display->println(PID_values.gyro_angle_Y);
+      //   display->print("Error = ");
+      //   display->println(PID_values.error);
+      //   display->print("Integral = ");
+      //   display->println(PID_values.integral);
+      //   display->print("Derivative = ");
+      //   display->println(PID_values.derivative);
+      //   display->print("Output = ");
+      //   display->println(PID_values.output);
+        
+      // }
 
       // static struct_mpu_reader mpu_value;
 
@@ -180,6 +207,11 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
 
       if(current_UI->prev_UI != nullptr){
 
+        if(xSemaphoreTake(xMutex_start_robot_flag, portMAX_DELAY) == pdTRUE){
+          start_robot_flag= false;
+          xSemaphoreGive(xMutex_start_robot_flag);
+        }
+        
         current_UI = current_UI->prev_UI;
       }
 
@@ -204,7 +236,7 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
 
       if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
-        display->printf("Kp = %.2f\n", center_controller.Kp);
+        display->printf("Kp = %.2f\n", center_controller_PID_params.Kp);
         xSemaphoreGive(xMutex_PID_parameters);
       }
       
@@ -217,7 +249,7 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
 
       if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
-        display->printf("Ki = %.2f\n", center_controller.Ki);
+        display->printf("Ki = %.2f\n", center_controller_PID_params.Ki);
         xSemaphoreGive(xMutex_PID_parameters);
       }  
 
@@ -230,7 +262,7 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
 
       if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
-        display->printf("Kd = %.2f\n", center_controller.Kd);
+        display->printf("Kd = %.2f\n", center_controller_PID_params.Kd);
         xSemaphoreGive(xMutex_PID_parameters);
       }  
 
@@ -282,13 +314,13 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
   struct{
 
     String title = "MODIFY KP";
-    uint8_t args[1] = {(uint8_t)center_controller.Kp};
+    uint8_t *args;
     uint8_t args_len = 1;
     uint8_t nextUI_len = 0;
 
     void display_func(){
 
-      display->printf("Kp = %d\n", args[0]);
+      display->printf("Kp = %.2f\n", temp_PID_params.Kp);
 
       display->println("-UP button: increase value");
       display->println("-DOWN button: increase value");
@@ -297,23 +329,13 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
     }
 
     void btnUP_func(){
-
-      if(current_UI->args[0] >= MODIFY_MAX_PARAMETERS_VALUE) {
-        current_UI->args[0] = MODIFY_MIN_PARAMETERS_VALUE;
-      }else{
-        ++current_UI->args[0];
-      }    
-
+      temp_PID_params.Kp += 0.1F;
     }
 
     void btnDOWN_func(){
       
-      Serial.printf("In menu_ui_btnUP_func, current_UI->args[0] = %d\n", current_UI->args[0]);
-      if(current_UI->args[0] <= MODIFY_MIN_PARAMETERS_VALUE) {
-        current_UI->args[0] = MODIFY_MAX_PARAMETERS_VALUE;
-      }else{
-        --current_UI->args[0];
-      }
+      // Serial.printf("In menu_ui_btnUP_func, current_UI->args[0] = %d\n", current_UI->args[0]);      
+      temp_PID_params.Kp -= 0.1F;
 
     }
 
@@ -321,8 +343,9 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
       
       if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
-        center_controller.Kp = (double)args[0];
-
+        center_controller_PID_params.Kp = temp_PID_params.Kp;
+        EEPROM.writeFloat(eeprom_Kp_address,temp_PID_params.Kp);
+        EEPROM.commit();
         xSemaphoreGive(xMutex_PID_parameters);
       }
     }
@@ -330,6 +353,8 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
     void btnESC_func(){
 
       if(current_UI->prev_UI != nullptr){
+
+        temp_PID_params.Kp = center_controller_PID_params.Kp;
 
         current_UI = current_UI->prev_UI;
       }
@@ -340,13 +365,13 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
   struct{
 
     String title = "MODIFY KI";
-    uint8_t args[1] = {(uint8_t)center_controller.Ki};
+    uint8_t *args;
     uint8_t args_len = 1;
     uint8_t nextUI_len = 0;
 
     void display_func(){
 
-      display->printf("Ki = %d\n", args[0]);
+      display->printf("Ki = %.2f\n", temp_PID_params.Ki);
 
       display->println("-UP button: increase value");
       display->println("-DOWN button: increase value");
@@ -356,22 +381,12 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
 
     void btnUP_func(){
 
-      if(current_UI->args[0] >= MODIFY_MAX_PARAMETERS_VALUE) {
-        current_UI->args[0] = MODIFY_MIN_PARAMETERS_VALUE;
-      }else{
-        ++current_UI->args[0];
-      }    
+      temp_PID_params.Ki += 0.1F;
 
     }
 
-    void btnDOWN_func(){
-      
-      Serial.printf("In menu_ui_btnUP_func, current_UI->args[0] = %d\n", current_UI->args[0]);
-      if(current_UI->args[0] <= MODIFY_MIN_PARAMETERS_VALUE) {
-        current_UI->args[0] = MODIFY_MAX_PARAMETERS_VALUE;
-      }else{
-        --current_UI->args[0];
-      }
+    void btnDOWN_func(){      
+      temp_PID_params.Ki -= 0.1F;
 
     }
 
@@ -379,8 +394,9 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
       
       if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
-        center_controller.Ki = (double)args[0];
-
+        center_controller_PID_params.Ki = temp_PID_params.Ki;
+        EEPROM.writeFloat(eeprom_Ki_address,temp_PID_params.Ki);
+        EEPROM.commit();
         xSemaphoreGive(xMutex_PID_parameters);
       }
     }
@@ -388,6 +404,8 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
     void btnESC_func(){
 
       if(current_UI->prev_UI != nullptr){
+
+        temp_PID_params.Ki = center_controller_PID_params.Ki;
 
         current_UI = current_UI->prev_UI;
       }
@@ -398,13 +416,13 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
   struct{
 
     String title = "MODIFY KD";
-    uint8_t args[1] = {(uint8_t)center_controller.Kd};
+    uint8_t* args;
     uint8_t args_len = 1;
     uint8_t nextUI_len = 0;
 
     void display_func(){
 
-      display->printf("Kd = %d\n", args[0]);
+      display->printf("Kd = %.2f\n", temp_PID_params.Kd);
 
       display->println("-UP button: increase value");
       display->println("-DOWN button: increase value");
@@ -414,22 +432,13 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
 
     void btnUP_func(){
 
-      if(current_UI->args[0] >= MODIFY_MAX_PARAMETERS_VALUE) {
-        current_UI->args[0] = MODIFY_MIN_PARAMETERS_VALUE;
-      }else{
-        ++current_UI->args[0];
-      }    
+      temp_PID_params.Kd += 0.1F;
 
     }
 
     void btnDOWN_func(){
-      
-      Serial.printf("In menu_ui_btnUP_func, current_UI->args[0] = %d\n", current_UI->args[0]);
-      if(current_UI->args[0] <= MODIFY_MIN_PARAMETERS_VALUE) {
-        current_UI->args[0] = MODIFY_MAX_PARAMETERS_VALUE;
-      }else{
-        --current_UI->args[0];
-      }
+
+      temp_PID_params.Kd -= 0.1F;
 
     }
 
@@ -437,8 +446,9 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
       
       if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
-        center_controller.Kd = (double)args[0];
-
+        center_controller_PID_params.Kd = temp_PID_params.Kd;
+        EEPROM.writeFloat(eeprom_Kd_address,temp_PID_params.Kd);
+        EEPROM.commit();
         xSemaphoreGive(xMutex_PID_parameters);
       }
     }
@@ -446,6 +456,8 @@ SemaphoreHandle_t  xMutex_menu_curr_opt;
     void btnESC_func(){
 
       if(current_UI->prev_UI != nullptr){
+
+        temp_PID_params.Kd = center_controller_PID_params.Kd;
 
         current_UI = current_UI->prev_UI;
       }
@@ -478,7 +490,9 @@ void create_all_ui(){
                                                   current_UI,
                                                   start_n_plot_ui.nextUI_len, 
                                                   [](){start_n_plot_ui.display_func();},
-                                                  nullptr, nullptr, nullptr,
+                                                  [](){},
+                                                  [](){}, 
+                                                  [](){},
                                                   [](){start_n_plot_ui.btnESC_func();});
 
     temp_ui->next_UI[0] = start_and_plot_ui_temp;
@@ -580,6 +594,10 @@ void create_all_ui(){
  * @param src_h: OLED's height in pixel.
  */
 void init_display(int scr_w, int scr_h){
+
+  temp_PID_params.Kp = center_controller_PID_params.Kp;
+  temp_PID_params.Ki = center_controller_PID_params.Ki;
+  temp_PID_params.Kd = center_controller_PID_params.Kd;
 
   // Initialize screen
   display = new Adafruit_SSD1306(scr_w, scr_h, &Wire, OLED_RESET); 
@@ -722,7 +740,7 @@ void draw_menu(void* arg){
 
     display->display();
 
-    vTaskDelay((fps/1000)/portTICK_PERIOD_MS);
+    vTaskDelay((fps)/portTICK_PERIOD_MS);
   }
 }
 
