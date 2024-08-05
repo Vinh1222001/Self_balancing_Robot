@@ -63,6 +63,9 @@ void motor_write_ENA(int value){
         }
         // Serial.println("Set ENA successfully");
         xSemaphoreGive(xMutex_ENA_value);
+    }else{
+        Serial.println("Can't set PWM for ENA!");
+
     }
 
     
@@ -85,6 +88,8 @@ void motor_write_ENB(int value){
         // Serial.println("Set ENB successfully");
 
         xSemaphoreGive(xMutex_ENB_value);
+    }else{
+        Serial.println("Can't set PWM for ENB!");
     }
 
 
@@ -97,10 +102,16 @@ void motor_write_both_EN(int value){
 
 void motor_controller_task(void* arg){
 
+
     while (true)
     {
+        // motor_write_both_EN(80);
+
         if(xSemaphoreTake(xMutex_curr_move_state, portMAX_DELAY) == pdTRUE){
-            // Serial.printf("current_movement_state = %d\n",current_movement_state);
+            // current_movement_state++;
+            // if(current_movement_state > 4) current_movement_state = 0;
+
+            Serial.printf("current_movement_state = %d\n",current_movement_state);
 
             digitalWrite(MOTOR_IN1_PIN, motor_in_state[current_movement_state][IN1_SIGNAL_INDEX]);
             digitalWrite(MOTOR_IN2_PIN, motor_in_state[current_movement_state][IN2_SIGNAL_INDEX]);
@@ -111,6 +122,8 @@ void motor_controller_task(void* arg){
         
         if(xSemaphoreTake(xMutex_ENA_value, portMAX_DELAY) == pdTRUE){
             
+            
+
             analogWrite(MOTOR_ENA_PIN, ENA_value);
 
             xSemaphoreGive(xMutex_ENA_value);
@@ -123,7 +136,7 @@ void motor_controller_task(void* arg){
             xSemaphoreGive(xMutex_ENB_value);
         }
         vTaskDelay((10)/portTICK_PERIOD_MS);
-
+        // vTaskDelay((3000)/portTICK_PERIOD_MS);
 
         // Serial.printf("\n");
     }

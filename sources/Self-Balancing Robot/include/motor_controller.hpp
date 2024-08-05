@@ -12,8 +12,8 @@
 #define MOTOR_ENA_PIN 25
 #define MOTOR_ENB_PIN 26
 
-#define MOVE_BACKWOARD  0
-#define MOVE_FORWARD    1
+#define MOVE_FORWARD    0
+#define MOVE_BACKWOARD  1
 #define MOVE_LEFT       2
 #define MOVE_RIGHT      3
 #define MOVE_STOP       4

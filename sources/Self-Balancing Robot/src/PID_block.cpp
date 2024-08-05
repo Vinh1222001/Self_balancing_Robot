@@ -18,9 +18,9 @@ float derivative = 0;
 float output = 0;
 
 // Desired setpoint (upright position)
-float setpoint = 80;
+float setpoint = 86;
 
-float alpha = 0.99;
+float alpha = 0.9934;
 
 const float dt = 0.01;
 
@@ -31,7 +31,8 @@ void PID_task(void* arg){
 
     float /*gyroRate = 0, gyroAngle = 0,*/ currentAngle = 0;
     float pitch = 0;
-
+    unsigned long prev_time = millis();
+    unsigned long duration_time = 0;
     while (true)
     {
 
@@ -39,8 +40,9 @@ void PID_task(void* arg){
             
             // gyroRate = map(angle_values.gyroY, -32768, 32767, -250, 250);
             // gyroAngle += (float)angle_values.gyroY*0.005;  
+            duration_time = (millis() - prev_time) * 0.001;
             pitch = atan2(mpu_values.accel.z, mpu_values.accel.x);
-            currentAngle = alpha*(currentAngle + mpu_values.gyro.y *dt) + (1-alpha)*(pitch);
+            currentAngle = alpha*(currentAngle + mpu_values.gyro.y * duration_time) + (1-alpha)*(pitch);
             error = setpoint - (currentAngle*RAD_TO_DEG);
 
             Serial.printf("Current Angle = %.2f\n", currentAngle);

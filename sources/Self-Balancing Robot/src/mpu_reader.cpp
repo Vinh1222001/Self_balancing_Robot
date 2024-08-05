@@ -2,7 +2,7 @@
 
 // Constants
 const float alpha = 0.98;
-const float dt = 0.01; // 10ms for example
+const float dt = 0.01; // 20ms 
 
 // Variables
 QueueHandle_t q_mpu_values;
@@ -132,9 +132,9 @@ void mpu_reading(void* arg){
         }
 
         if(xQueueSendToFront(q_mpu_values, &mpu_values, (dt*1000)/portTICK_PERIOD_MS) == pdTRUE){
-            // Serial.println("MPU values sent successfully");
+            Serial.println("MPU values sent successfully");
         }else{
-            // Serial.println("MPU values can't sent successfully");
+            Serial.println("MPU values can't sent successfully");
         }
     
         vTaskDelay((dt*1000)/portTICK_PERIOD_MS);
