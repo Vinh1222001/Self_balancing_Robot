@@ -31,6 +31,7 @@ void PID_task(void* arg){
 
     float /*gyroRate = 0, gyroAngle = 0,*/ currentAngle = 0;
     float pitch = 0;
+
     while (true)
     {
 
