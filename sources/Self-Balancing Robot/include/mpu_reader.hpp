@@ -9,6 +9,8 @@
 
 extern Adafruit_MPU6050* mpu_reader;
 
+extern TaskHandle_t mpu_reader_task_handle;
+
 struct struct_mpu_reader{
     // float roll;
     sensors_vec_t accel;

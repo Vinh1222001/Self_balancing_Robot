@@ -168,6 +168,7 @@ void motor_controller_run(void){
     Serial.print("In motor controller component, ");
     if(xTaskCreatePinnedToCore(motor_controller_task, "motor_controller_task", 2024, nullptr, 5, &motor_controller_task_handle, 0)==pdPASS){
         Serial.println("Created motor_controller_task() task successfully!");
+        vTaskSuspend(motor_controller_task_handle);
     }else{
         Serial.println("Create motor_controller_task() task failed!");
     }

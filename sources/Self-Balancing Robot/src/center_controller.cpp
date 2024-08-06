@@ -4,11 +4,9 @@ struct_angle_values angle_values={0,0};
 
 SemaphoreHandle_t xMutex_PID_parameters;
 
-struct_PID_parameters center_controller_PID_params = {0,0,0};
+struct_PID_parameters center_controller_PID_params = {0,0,0,0};
 
-const int eeprom_Kp_address = 0;
-const int eeprom_Ki_address = eeprom_Kp_address + sizeof(float);
-const int eeprom_Kd_address = eeprom_Ki_address + sizeof(float);
+struct_eeprom_address eeprom_adresses = {0, sizeof(float), 2*sizeof(float), 3*sizeof(float)};
 
 bool start_robot_flag = false;
 
@@ -27,6 +25,11 @@ void system_controller(void* arg){
             
             if(start_robot_flag){
 
+                if(eTaskGetState(mpu_reader_task_handle) == eSuspended){
+
+                    vTaskResume(mpu_reader_task_handle);
+                }
+
                 if(eTaskGetState(motor_controller_task_handle) == eSuspended){
 
                     vTaskResume(motor_controller_task_handle);
@@ -39,18 +42,24 @@ void system_controller(void* arg){
                 
 
             }else{
+                
+                vTaskSuspend(mpu_reader_task_handle);
+
+                vTaskSuspend(PID_task_handle);
 
                 motor_stop();
 
                 vTaskSuspend(motor_controller_task_handle);
                 
-                vTaskSuspend(PID_task_handle);
+
             }
 
             xSemaphoreGive(xMutex_start_robot_flag);
+        }else{
+            ESP_LOGE("CENTER CONTROLLER", "Can't get xMutex_start_robot_flag\n");
         }
 
-        vTaskDelay(100/portTICK_PERIOD_MS);
+        vTaskDelay(200/portTICK_PERIOD_MS);
     }
     
 }
@@ -100,14 +109,16 @@ void center_controller_init(){
 
     EEPROM.begin(sizeof(struct_PID_parameters));
     
-    center_controller_PID_params.Kp = EEPROM.readFloat(eeprom_Kp_address);
-    center_controller_PID_params.Ki = EEPROM.readFloat(eeprom_Ki_address);
-    center_controller_PID_params.Kd = EEPROM.readFloat(eeprom_Kd_address);
+    center_controller_PID_params.Kp = EEPROM.readFloat(eeprom_adresses.eeprom_Kp_address);
+    center_controller_PID_params.Ki = EEPROM.readFloat(eeprom_adresses.eeprom_Ki_address);
+    center_controller_PID_params.Kd = EEPROM.readFloat(eeprom_adresses.eeprom_Ki_address);
+    center_controller_PID_params.setpoint = EEPROM.readFloat(eeprom_adresses.eeprom_setpoint_address);
 
     Serial.printf("eeprom's size = %d\n", EEPROM.length());
-    Serial.printf("Kp = %.2f at address = %d\n", center_controller_PID_params.Kp, eeprom_Kp_address);
-    Serial.printf("Ki = %.2f at address = %d\n", center_controller_PID_params.Ki, eeprom_Ki_address);
-    Serial.printf("Kd = %.2f at address = %d\n", center_controller_PID_params.Kd, eeprom_Kd_address);
+    Serial.printf("Kp = %.2f at address = %d\n", center_controller_PID_params.Kp, eeprom_adresses.eeprom_Kp_address);
+    Serial.printf("Ki = %.2f at address = %d\n", center_controller_PID_params.Ki, eeprom_adresses.eeprom_Ki_address);
+    Serial.printf("Kd = %.2f at address = %d\n", center_controller_PID_params.Kd, eeprom_adresses.eeprom_Kd_address);
+    Serial.printf("Setpoint = %.2f at address = %d\n", center_controller_PID_params.setpoint, eeprom_adresses.eeprom_setpoint_address);
 
     xMutex_PID_parameters = xSemaphoreCreateMutex();
     xMutex_start_robot_flag = xSemaphoreCreateMutex();
@@ -116,8 +127,8 @@ void center_controller_init(){
 }
 
 void center_controller_run(){
-
-    if(xTaskCreatePinnedToCore(system_controller,"system_controller", 2048, nullptr, 8, nullptr, 0)== pdPASS){
+    
+    if(xTaskCreatePinnedToCore(system_controller,"system_controller", 2048, nullptr, 8, nullptr, 1)== pdPASS){
         Serial.println("Created system_controller task successfully");
     }else{
         Serial.println("Created system_controller task failed!");
@@ -128,16 +139,16 @@ void center_controller_run(){
         
     }
 
-    // if(xTaskCreatePinnedToCore(set_angle_values,"set_angle_values", 2048, nullptr, 7, nullptr, 0)== pdPASS){
-    //     Serial.println("Created set_angle_values task successfully");
-    // }else{
-    //     Serial.println("Created set_angle_values task failed!");
-    //     while (true)
-    //     {
-    //         /* code */
-    //     }
+    if(xTaskCreatePinnedToCore(set_angle_values,"set_angle_values", 2048, nullptr, 7, nullptr, 0)== pdPASS){
+        Serial.println("Created set_angle_values task successfully");
+    }else{
+        Serial.println("Created set_angle_values task failed!");
+        while (true)
+        {
+            /* code */
+        }
         
-    // }
+    }
 
 
 

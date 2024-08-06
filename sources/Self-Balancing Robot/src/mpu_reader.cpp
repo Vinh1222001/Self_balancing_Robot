@@ -15,6 +15,8 @@ Adafruit_MPU6050* mpu_reader;
 
 Adafruit_Sensor *mpu_accel, *mpu_gyro; 
 
+TaskHandle_t mpu_reader_task_handle;
+
 void mpu_setup(){
     // mpu_reader->setAccelerometerRange(MPU6050_RANGE_2_G);
     // Serial.print("Accelerometer range set to: ");
@@ -84,9 +86,10 @@ void mpu_setup(){
 }
 
 void mpu_reader_init(void){
+
     mpu_reader = new Adafruit_MPU6050();
 
-    if (!mpu_reader->begin()) {
+    if (!mpu_reader->begin(0x68,&Wire, 0)) {
         Serial.println("Failed to find MPU6050 chip");
         while (1) {
         delay(10);
@@ -103,9 +106,10 @@ void mpu_reader_init(void){
 
 void mpu_reading(void* arg){
     /* Get new sensor events with the readings */
+    sensors_event_t accel, gyro;
+    
     while (true)
     {
-        static sensors_event_t accel, gyro;
         
         if(mpu_accel->getEvent(&accel)){
             // Serial.println("get mpu values done!");
@@ -144,8 +148,11 @@ void mpu_reading(void* arg){
 
 void mpu_reader_run(){
 
-    if(xTaskCreatePinnedToCore(mpu_reading, "mpu_reading", 4096, nullptr, 8,nullptr, 0) == pdPASS){
+    if(xTaskCreatePinnedToCore(mpu_reading, "mpu_reading", 4096, nullptr, 8, &mpu_reader_task_handle, 0) == pdPASS){
         Serial.println("Created mpu_reading task successfully");
+
+        vTaskSuspend(mpu_reader_task_handle);
+    
     }else{
         Serial.println("Created mpu_reading task failed!");
         while (true)

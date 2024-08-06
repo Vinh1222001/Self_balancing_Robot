@@ -14,11 +14,12 @@
 
 #pragma region ALL DEFINITION FOR PARAMETERS OF PID UI
 
-  #define PID_PARAMETERS_MODIFY_KP    0
-  #define PID_PARAMETERS_MODIFY_KI    1
-  #define PID_PARAMETERS_MODIFY_KD    2
+  #define PID_PARAMETERS_MODIFY_KP        0
+  #define PID_PARAMETERS_MODIFY_KI        1
+  #define PID_PARAMETERS_MODIFY_KD        2
+  #define PID_PARAMETERS_MODIFY_SETPOINT  3
 
-  #define PID_PARAMETERS_MAX_OPTION   3
+  #define PID_PARAMETERS_MAX_OPTION   4
   #define PID_PARAMETERS_MIN_OPTION   1
 
 #pragma endregion
@@ -128,39 +129,39 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
 
       static PID_block PID_values;
 
-      // if(xQueueReceive(q_PID_values, &PID_values, fps/portTICK_PERIOD_MS) == pdTRUE){
+      if(xQueueReceive(q_PID_values, &PID_values, fps/portTICK_PERIOD_MS) == pdTRUE){
 
-      //   display->print("Filted Pitch = ");
-      //   display->println(PID_values.filted_pitch);
-      //   // display->println(" degree");
-      //   display->print("Gyro angle Y = ");
-      //   display->println(PID_values.gyro_angle_Y);
-      //   display->print("Error = ");
-      //   display->println(PID_values.error);
-      //   display->print("Integral = ");
-      //   display->println(PID_values.integral);
-      //   display->print("Derivative = ");
-      //   display->println(PID_values.derivative);
-      //   display->print("Output = ");
-      //   display->println(PID_values.output);
+        display->print("Filted Pitch = ");
+        display->println(PID_values.filted_pitch);
+        // display->println(" degree");
+        display->print("Gyro angle Y = ");
+        display->println(PID_values.gyro_angle_Y);
+        display->print("Error = ");
+        display->println(PID_values.error);
+        display->print("Integral = ");
+        display->println(PID_values.integral);
+        display->print("Derivative = ");
+        display->println(PID_values.derivative);
+        display->print("Output = ");
+        display->println(PID_values.output);
         
-      // }else{
-      //   // ESP_LOGE("DISPLAY CONTROLLER", "Can't recieve angle values!\n");
-      //   display->print("Filted Pitch = ");
-      //   display->println(PID_values.filted_pitch);
-      //   // display->println(" degree");
-      //   display->print("Gyro angle Y = ");
-      //   display->println(PID_values.gyro_angle_Y);
-      //   display->print("Error = ");
-      //   display->println(PID_values.error);
-      //   display->print("Integral = ");
-      //   display->println(PID_values.integral);
-      //   display->print("Derivative = ");
-      //   display->println(PID_values.derivative);
-      //   display->print("Output = ");
-      //   display->println(PID_values.output);
+      }else{
+        // ESP_LOGE("DISPLAY CONTROLLER", "Can't recieve angle values!\n");
+        display->print("Filted Pitch = ");
+        display->println(PID_values.filted_pitch);
+        // display->println(" degree");
+        display->print("Gyro angle Y = ");
+        display->println(PID_values.gyro_angle_Y);
+        display->print("Error = ");
+        display->println(PID_values.error);
+        display->print("Integral = ");
+        display->println(PID_values.integral);
+        display->print("Derivative = ");
+        display->println(PID_values.derivative);
+        display->print("Output = ");
+        display->println(PID_values.output);
         
-      // }
+      }
 
       // static struct_mpu_reader mpu_value;
 
@@ -223,7 +224,7 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
     String title = "PID'S PARAMETERS";
     uint8_t args[1] = {0};
     uint8_t args_len = 1;
-    uint8_t nextUI_len = 3;
+    uint8_t nextUI_len = 4;
 
     void display_func(){
 
@@ -263,6 +264,19 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
       if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
         display->printf("Kd = %.2f\n", center_controller_PID_params.Kd);
+        xSemaphoreGive(xMutex_PID_parameters);
+      }  
+
+      if (current_UI->args[0] == PID_PARAMETERS_MODIFY_SETPOINT)
+      {
+        display->setTextColor(BLACK, WHITE);
+      }else{
+        display->setTextColor(WHITE, BLACK);
+      }
+
+      if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
+
+        display->printf("Setpoint = %.2f\n", center_controller_PID_params.setpoint);
         xSemaphoreGive(xMutex_PID_parameters);
       }  
 
@@ -315,7 +329,7 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
 
     String title = "MODIFY KP";
     uint8_t *args;
-    uint8_t args_len = 1;
+    uint8_t args_len = 0;
     uint8_t nextUI_len = 0;
 
     void display_func(){
@@ -344,7 +358,7 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
       if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
         center_controller_PID_params.Kp = temp_PID_params.Kp;
-        EEPROM.writeFloat(eeprom_Kp_address,temp_PID_params.Kp);
+        EEPROM.writeFloat(eeprom_adresses.eeprom_Kp_address,temp_PID_params.Kp);
         EEPROM.commit();
         xSemaphoreGive(xMutex_PID_parameters);
       }
@@ -366,7 +380,7 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
 
     String title = "MODIFY KI";
     uint8_t *args;
-    uint8_t args_len = 1;
+    uint8_t args_len = 0;
     uint8_t nextUI_len = 0;
 
     void display_func(){
@@ -395,7 +409,7 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
       if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
         center_controller_PID_params.Ki = temp_PID_params.Ki;
-        EEPROM.writeFloat(eeprom_Ki_address,temp_PID_params.Ki);
+        EEPROM.writeFloat(eeprom_adresses.eeprom_Ki_address,temp_PID_params.Ki);
         EEPROM.commit();
         xSemaphoreGive(xMutex_PID_parameters);
       }
@@ -417,7 +431,7 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
 
     String title = "MODIFY KD";
     uint8_t* args;
-    uint8_t args_len = 1;
+    uint8_t args_len = 0;
     uint8_t nextUI_len = 0;
 
     void display_func(){
@@ -447,7 +461,7 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
       if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
 
         center_controller_PID_params.Kd = temp_PID_params.Kd;
-        EEPROM.writeFloat(eeprom_Kd_address,temp_PID_params.Kd);
+        EEPROM.writeFloat(eeprom_adresses.eeprom_Kd_address,temp_PID_params.Kd);
         EEPROM.commit();
         xSemaphoreGive(xMutex_PID_parameters);
       }
@@ -464,6 +478,58 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
 
     }
   } modify_kd;
+
+  struct{
+
+    String title = "MODIFY SETPOINT";
+    uint8_t* args;
+    uint8_t args_len = 0;
+    uint8_t nextUI_len = 0;
+
+    void display_func(){
+
+      display->printf("Kd = %.2f\n", temp_PID_params.setpoint);
+
+      display->println("-UP button: increase value");
+      display->println("-DOWN button: increase value");
+      display->println("-OK button: set value");
+
+    }
+
+    void btnUP_func(){
+
+      temp_PID_params.setpoint += 0.1F;
+
+    }
+
+    void btnDOWN_func(){
+
+      temp_PID_params.setpoint -= 0.1F;
+
+    }
+
+    void btnOK_func(){
+      
+      if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
+
+        center_controller_PID_params.setpoint = temp_PID_params.setpoint;
+        EEPROM.writeFloat(eeprom_adresses.eeprom_setpoint_address, temp_PID_params.setpoint);
+        EEPROM.commit();
+        xSemaphoreGive(xMutex_PID_parameters);
+      }
+    }
+
+    void btnESC_func(){
+
+      if(current_UI->prev_UI != nullptr){
+
+        temp_PID_params.setpoint = center_controller_PID_params.setpoint;
+
+        current_UI = current_UI->prev_UI;
+      }
+
+    }
+  } modify_setpoint;
 #pragma endregion
 
 /**
@@ -584,6 +650,26 @@ void create_all_ui(){
     Serial.println("Created Modify Kd UI successfully");
   } 
 
+  // Create MODIFY SETPOINT UI 
+  if(temp_ui->next_UI[3] == nullptr){
+
+    Serial.println("Creating Modify Setpoint UI");
+    
+    UI_tree* modify_kd_ui_temp = new UI_tree(modify_setpoint.title, modify_setpoint.args, modify_setpoint.args_len,
+                                            current_UI->next_UI[1],
+                                            modify_setpoint.nextUI_len, 
+                                            [](){modify_setpoint.display_func();},                                                  
+                                            [](){modify_setpoint.btnUP_func();}, 
+                                            [](){modify_setpoint.btnDOWN_func();}, 
+                                            [](){modify_setpoint.btnOK_func();},
+                                            [](){modify_setpoint.btnESC_func();});
+    temp_ui->next_UI[3] = modify_kd_ui_temp;
+  }
+
+  if(temp_ui->next_UI[3] != nullptr){
+    Serial.println("Created Modify Setpoint UI successfully");
+  } 
+
 }
 
 /**
@@ -598,6 +684,7 @@ void init_display(int scr_w, int scr_h){
   temp_PID_params.Kp = center_controller_PID_params.Kp;
   temp_PID_params.Ki = center_controller_PID_params.Ki;
   temp_PID_params.Kd = center_controller_PID_params.Kd;
+  temp_PID_params.setpoint = center_controller_PID_params.setpoint;
 
   // Initialize screen
   display = new Adafruit_SSD1306(scr_w, scr_h, &Wire, OLED_RESET); 
@@ -732,7 +819,7 @@ void draw_menu(void* arg){
     display->setTextSize(1);
     
     // TODO: Display current UI
-    if(xSemaphoreTake(xMutex_menu_curr_opt, portMAX_DELAY)){
+    if(xSemaphoreTake(xMutex_menu_curr_opt, portMAX_DELAY) == pdTRUE){
 
       current_UI->display_func();
       xSemaphoreGive(xMutex_menu_curr_opt);

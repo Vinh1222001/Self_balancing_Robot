@@ -6,9 +6,9 @@ PID_block PID_values = {0,0,0,0,0,0};
 
 QueueHandle_t q_PID_values;
 // PID constants
-float Kp = 80;
-float Ki = 20;
-float Kd = 0;
+float Kp = 21;
+float Ki = 33;
+float Kd = 0.8;
 
 // PID variables
 float error = 0;
@@ -18,11 +18,11 @@ float derivative = 0;
 float output = 0;
 
 // Desired setpoint (upright position)
-float setpoint = 86;
+float setpoint = 88.5;
 
 float alpha = 0.9934;
 
-const float dt = 0.01;
+const float dt = 0.02;
 
 void PID_task(void* arg){
 
@@ -32,7 +32,7 @@ void PID_task(void* arg){
     float /*gyroRate = 0, gyroAngle = 0,*/ currentAngle = 0;
     float pitch = 0;
     unsigned long prev_time = millis();
-    unsigned long duration_time = 0;
+    float duration_time = 0;
     while (true)
     {
 
@@ -45,7 +45,6 @@ void PID_task(void* arg){
             currentAngle = alpha*(currentAngle + mpu_values.gyro.y * duration_time) + (1-alpha)*(pitch);
             error = setpoint - (currentAngle*RAD_TO_DEG);
 
-            Serial.printf("Current Angle = %.2f\n", currentAngle);
 
             // Serial.print("PID BLOCK, error = ");
             // Serial.println(error);
@@ -61,7 +60,17 @@ void PID_task(void* arg){
 
             output = Kp * error + Ki * integral + Kd * derivative;
 
+            Serial.printf("Current Angle = %.2f,\terror = %.2f,\tintegral = %.2f,\tderivative = %.2f,\toutput = %.2f,\tduration_time = %.2f\n", 
+                            currentAngle*RAD_TO_DEG,
+                            error,
+                            integral,
+                            derivative,
+                            output,
+                            duration_time);
+
             previousError = error;
+
+            prev_time = millis();
 
             // PID_values.filted_pitch = currentAngle;
             // PID_values.gyro_angle_Y = mpu_values.gyro.y;
@@ -109,7 +118,7 @@ void PID_run(){
     if(xTaskCreatePinnedToCore(PID_task, "PID_task", 2048, nullptr, 8, &PID_task_handle, 0) == pdPASS){
         // ESP_LOGI("PID BLOCK", "Created task successfully!\n");
         Serial.println("PID BLOCK, Created task successfully!");
-
+        vTaskSuspend(PID_task_handle);
     }else{
         // ESP_LOGE("PID BLOCK", "Create PID_task() failed!\n");
 
