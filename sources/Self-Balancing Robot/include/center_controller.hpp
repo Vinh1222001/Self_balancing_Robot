@@ -7,14 +7,15 @@
 #include "mpu_reader.hpp"
 #include "motor_controller.hpp"
 #include "PID_block.hpp"
+#include "global.hpp"
 
-struct struct_PID_parameters
-{
-    float Kp;
-    float Ki;
-    float Kd;
-    float setpoint;
-};
+// struct struct_PID_parameters
+// {
+//     float Kp;
+//     float Ki;
+//     float Kd;
+//     float setpoint;
+// };
 
 extern struct_PID_parameters center_controller_PID_params;
 

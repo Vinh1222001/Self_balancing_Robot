@@ -28,16 +28,36 @@ void system_controller(void* arg){
                 if(eTaskGetState(mpu_reader_task_handle) == eSuspended){
 
                     vTaskResume(mpu_reader_task_handle);
+
+                    if (eTaskGetState(mpu_reader_task_handle) == eRunning)
+                    {
+                        ESP_LOGI("MPU READER", "Task resumed successfully\n");
+                    }
+                    
                 }
+
+                
 
                 if(eTaskGetState(motor_controller_task_handle) == eSuspended){
 
                     vTaskResume(motor_controller_task_handle);
+
+                    if (eTaskGetState(motor_controller_task_handle) == eRunning)
+                    {
+                        ESP_LOGI("MOTOR CONTROLLER", "Task resumed successfully\n");
+                    }
                 }
                 
                 if(eTaskGetState(PID_task_handle) == eSuspended){
-
+                    PID_block_PID_params.Kp = center_controller_PID_params.Kp;
+                    PID_block_PID_params.Ki = center_controller_PID_params.Ki;
+                    PID_block_PID_params.Kd = center_controller_PID_params.Kd;
+                    PID_block_PID_params.setpoint = center_controller_PID_params.setpoint;
                     vTaskResume(PID_task_handle);
+                    if (eTaskGetState(PID_task_handle) == eRunning)
+                    {
+                        ESP_LOGI("PID BLOCK", "Task resumed successfully\n");
+                    }
                 }
                 
 
@@ -73,29 +93,15 @@ void set_angle_values(void* arg){
     // static int sample_count = 0;
     while (true)
     {
-        if(xQueueReceive(q_mpu_values, &mpu_values, 10/portTICK_PERIOD_MS) == pdTRUE){
-            // sample_count++;
-            // static unsigned long prev_time= 0;
+        if(xQueueReceive(q_mpu_values, &mpu_values, 100/portTICK_PERIOD_MS) == pdTRUE){
 
-            // float accelPitch = atan2(mpu_values.accel.x, sqrt(mpu_values.accel.y * mpu_values.accel.y + mpu_values.accel.z * mpu_values.accel.z));
-
-
-            // float duration_time = (millis() - prev_time)*0.001;
-
-            // if(abs(mpu_values.gyro.z) >= 0.02 ){
-
-                // angle_values.yaw += mpu_values.gyro.z * duration_time;
-                angle_values.gyroY = mpu_values.gyro.y;
-            // }
+            angle_values.gyroY = mpu_values.gyro.y;
 
             // Apply complementary filter
-            // angle_values.pitch = alpha * (angle_values.pitch + mpu_values.gyro.y * duration_time) + (1 - alpha) * accelPitch;
             angle_values.pitch = atan2(mpu_values.accel.z, mpu_values.accel.x);
-            
-            // prev_time = millis();
 
             if(xQueueSendToFront(q_angle_values, &angle_values, (10)/portTICK_PERIOD_MS) == pdTRUE){
-                // Serial.println("In Center Controller, Sent angle values successfully!");
+                Serial.println("In Center Controller, Sent angle values successfully!");
             }
         }
 
@@ -109,9 +115,21 @@ void center_controller_init(){
 
     EEPROM.begin(sizeof(struct_PID_parameters));
     
+    // EEPROM.writeFloat(eeprom_adresses.eeprom_Kp_address,11);
+    // EEPROM.commit();
+
+    // EEPROM.writeFloat(eeprom_adresses.eeprom_Ki_address,10);
+    // EEPROM.commit();
+
+    // EEPROM.writeFloat(eeprom_adresses.eeprom_Kd_address,0.5);
+    // EEPROM.commit();
+
+    // EEPROM.writeFloat(eeprom_adresses.eeprom_setpoint_address,80);
+    // EEPROM.commit();
+
     center_controller_PID_params.Kp = EEPROM.readFloat(eeprom_adresses.eeprom_Kp_address);
     center_controller_PID_params.Ki = EEPROM.readFloat(eeprom_adresses.eeprom_Ki_address);
-    center_controller_PID_params.Kd = EEPROM.readFloat(eeprom_adresses.eeprom_Ki_address);
+    center_controller_PID_params.Kd = EEPROM.readFloat(eeprom_adresses.eeprom_Kd_address);
     center_controller_PID_params.setpoint = EEPROM.readFloat(eeprom_adresses.eeprom_setpoint_address);
 
     Serial.printf("eeprom's size = %d\n", EEPROM.length());
@@ -139,16 +157,16 @@ void center_controller_run(){
         
     }
 
-    if(xTaskCreatePinnedToCore(set_angle_values,"set_angle_values", 2048, nullptr, 7, nullptr, 0)== pdPASS){
-        Serial.println("Created set_angle_values task successfully");
-    }else{
-        Serial.println("Created set_angle_values task failed!");
-        while (true)
-        {
-            /* code */
-        }
+    // if(xTaskCreatePinnedToCore(set_angle_values,"set_angle_values", 2048, nullptr, 7, nullptr, 0)== pdPASS){
+    //     Serial.println("Created set_angle_values task successfully");
+    // }else{
+    //     Serial.println("Created set_angle_values task failed!");
+    //     while (true)
+    //     {
+    //         /* code */
+    //     }
         
-    }
+    // }
 
 
 

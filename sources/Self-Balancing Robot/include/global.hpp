@@ -4,4 +4,12 @@
 
 #include <Arduino.h>
 
+struct struct_PID_parameters
+{
+    float Kp;
+    float Ki;
+    float Kd;
+    float setpoint;
+};
+
 #endif

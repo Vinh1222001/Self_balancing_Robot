@@ -3,9 +3,10 @@
 #define PID_BLOCK_HPP
 
 #include <Arduino.h>
-#include <center_controller.hpp>
-#include <motor_controller.hpp>
-#include <mpu_reader.hpp>
+#include "center_controller.hpp"
+#include "motor_controller.hpp"
+#include "mpu_reader.hpp"
+#include "global.hpp"
 
 struct PID_block
 {
@@ -16,6 +17,8 @@ struct PID_block
     float integral;
     float derivative;
 };
+
+extern struct_PID_parameters PID_block_PID_params;
 
 extern PID_block PID_values;
 

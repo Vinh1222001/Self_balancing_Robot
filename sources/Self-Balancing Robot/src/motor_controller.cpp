@@ -50,6 +50,8 @@ void motor_write_state(uint8_t state){
 
 void motor_write_ENA(int value){
     
+    value += 40;
+
     if(xSemaphoreTake(xMutex_ENA_value, portMAX_DELAY) == pdTRUE){
 
         if(value < ENABLE_MIN_VALUE){

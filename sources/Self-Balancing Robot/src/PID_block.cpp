@@ -4,11 +4,13 @@ TaskHandle_t PID_task_handle = nullptr;
 
 PID_block PID_values = {0,0,0,0,0,0};
 
+struct_PID_parameters PID_block_PID_params = {0,0,0,0};
+
 QueueHandle_t q_PID_values;
 // PID constants
-float Kp = 21;
-float Ki = 33;
-float Kd = 0.8;
+float Kp = 11;
+float Ki = 10;
+float Kd = 0.5;
 
 // PID variables
 float error = 0;
@@ -18,11 +20,11 @@ float derivative = 0;
 float output = 0;
 
 // Desired setpoint (upright position)
-float setpoint = 88.5;
+float setpoint = 80;
 
 float alpha = 0.9934;
 
-const float dt = 0.02;
+const float dt = 0.01;
 
 void PID_task(void* arg){
 
@@ -36,14 +38,13 @@ void PID_task(void* arg){
     while (true)
     {
 
-        if(xQueueReceive(q_mpu_values, &mpu_values, 10/portTICK_PERIOD_MS) == pdTRUE){
+        if(xQueueReceive(q_mpu_values, &mpu_values, 100/portTICK_PERIOD_MS) == pdTRUE){
             
-            // gyroRate = map(angle_values.gyroY, -32768, 32767, -250, 250);
-            // gyroAngle += (float)angle_values.gyroY*0.005;  
             duration_time = (millis() - prev_time) * 0.001;
             pitch = atan2(mpu_values.accel.z, mpu_values.accel.x);
             currentAngle = alpha*(currentAngle + mpu_values.gyro.y * duration_time) + (1-alpha)*(pitch);
-            error = setpoint - (currentAngle*RAD_TO_DEG);
+            error = PID_block_PID_params.setpoint - (currentAngle*RAD_TO_DEG);
+            // error = setpoint - (currentAngle*RAD_TO_DEG);
 
 
             // Serial.print("PID BLOCK, error = ");
@@ -53,12 +54,9 @@ void PID_task(void* arg){
             integral += error * dt;
             derivative = (error - previousError) / dt;
 
-            // if(xSemaphoreTake(xMutex_PID_parameters, portMAX_DELAY) == pdTRUE){
-            //     output = center_controller_PID_params.Kp * error + center_controller_PID_params.Ki * integral + center_controller_PID_params.Kd * derivative;
-            //     xSemaphoreGive(xMutex_PID_parameters);
-            // }
+            output = PID_block_PID_params.Kp * error + PID_block_PID_params.Ki * integral + PID_block_PID_params.Kd * derivative;
 
-            output = Kp * error + Ki * integral + Kd * derivative;
+            // output = Kp * error + Ki * integral + Kd * derivative;
 
             Serial.printf("Current Angle = %.2f,\terror = %.2f,\tintegral = %.2f,\tderivative = %.2f,\toutput = %.2f,\tduration_time = %.2f\n", 
                             currentAngle*RAD_TO_DEG,
@@ -72,16 +70,16 @@ void PID_task(void* arg){
 
             prev_time = millis();
 
-            // PID_values.filted_pitch = currentAngle;
-            // PID_values.gyro_angle_Y = mpu_values.gyro.y;
-            // PID_values.output = output;
-            // PID_values.error = error;
-            // PID_values.integral = integral;
-            // PID_values.derivative = derivative;
+            PID_values.filted_pitch = currentAngle;
+            PID_values.gyro_angle_Y = mpu_values.gyro.y;
+            PID_values.output = output;
+            PID_values.error = error;
+            PID_values.integral = integral;
+            PID_values.derivative = derivative;
 
-            // if(xQueueSend(q_PID_values, &PID_values, (dt*1000)/portTICK_PERIOD_MS) == pdTRUE){
-            //     Serial.println("In PID_block, sent PID_values successfully");
-            // }
+            if(xQueueSend(q_PID_values, &PID_values, (dt*1000)/portTICK_PERIOD_MS) == pdTRUE){
+                Serial.println("In PID_block, sent PID_values successfully");
+            }
 
             // Apply PID output to motor control (example)
             int motorSpeed = constrain(output, -255, 255);

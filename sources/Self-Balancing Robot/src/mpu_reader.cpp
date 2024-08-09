@@ -2,7 +2,7 @@
 
 // Constants
 const float alpha = 0.98;
-const float dt = 0.01; // 20ms 
+const float dt = 0.01; // 10ms 
 
 // Variables
 QueueHandle_t q_mpu_values;
@@ -148,7 +148,12 @@ void mpu_reading(void* arg){
 
 void mpu_reader_run(){
 
-    if(xTaskCreatePinnedToCore(mpu_reading, "mpu_reading", 4096, nullptr, 8, &mpu_reader_task_handle, 0) == pdPASS){
+    if(xTaskCreatePinnedToCore(mpu_reading, 
+                                "mpu_reading", 
+                                4096, nullptr, 
+                                8, 
+                                &mpu_reader_task_handle, 
+                                0) == pdPASS){
         Serial.println("Created mpu_reading task successfully");
 
         vTaskSuspend(mpu_reader_task_handle);

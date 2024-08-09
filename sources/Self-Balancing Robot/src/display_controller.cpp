@@ -95,10 +95,10 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
         // Serial.println("current_UI->next_UI[current_UI->args[0]] != nullptr");
         if(args[0] == MENU_START_N_PLOT_OPTION){
 
-          if(xSemaphoreTake(xMutex_start_robot_flag, portMAX_DELAY) == pdTRUE){
+          // if(xSemaphoreTake(xMutex_start_robot_flag, portMAX_DELAY) == pdTRUE){
             start_robot_flag= true;
-            xSemaphoreGive(xMutex_start_robot_flag);
-          }
+          //   xSemaphoreGive(xMutex_start_robot_flag);
+          // }
 
         }
 
@@ -131,76 +131,39 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
 
       if(xQueueReceive(q_PID_values, &PID_values, fps/portTICK_PERIOD_MS) == pdTRUE){
 
-        display->print("Filted Pitch = ");
-        display->println(PID_values.filted_pitch);
-        // display->println(" degree");
-        display->print("Gyro angle Y = ");
-        display->println(PID_values.gyro_angle_Y);
-        display->print("Error = ");
+        display->print("Pitch: ");
+        display->print(PID_values.filted_pitch*RAD_TO_DEG);
+        display->println(" deg");
+        // display->print("Gyro Y: ");
+        // display->print(PID_values.gyro_angle_Y);
+        // display->println(" deg/s");
+        display->print("Error: ");
         display->println(PID_values.error);
-        display->print("Integral = ");
+        display->print("Integral: ");
         display->println(PID_values.integral);
-        display->print("Derivative = ");
+        display->print("Derivative: ");
         display->println(PID_values.derivative);
-        display->print("Output = ");
+        display->print("Output: ");
         display->println(PID_values.output);
         
       }else{
-        // ESP_LOGE("DISPLAY CONTROLLER", "Can't recieve angle values!\n");
-        display->print("Filted Pitch = ");
-        display->println(PID_values.filted_pitch);
-        // display->println(" degree");
-        display->print("Gyro angle Y = ");
-        display->println(PID_values.gyro_angle_Y);
-        display->print("Error = ");
+        ESP_LOGE("DISPLAY CONTROLLER", "Can't recieve angle values!\n");
+        display->print("Pitch: ");
+        display->print(PID_values.filted_pitch*RAD_TO_DEG);
+        display->println(" deg");
+        // display->print("Gyro Y: ");
+        // display->print(PID_values.gyro_angle_Y);
+        // display->println(" deg/s");
+        display->print("Error: ");
         display->println(PID_values.error);
-        display->print("Integral = ");
+        display->print("Integral: ");
         display->println(PID_values.integral);
-        display->print("Derivative = ");
+        display->print("Derivative: ");
         display->println(PID_values.derivative);
-        display->print("Output = ");
+        display->print("Output: ");
         display->println(PID_values.output);
         
       }
-
-      // static struct_mpu_reader mpu_value;
-
-      // if(xQueueReceive(q_mpu_values, &mpu_value, (fps/1000)/portTICK_PERIOD_MS) == pdTRUE){
-
-      //   display->println("Accelerometer - m/s^2");
-      //   display->print(mpu_value.accel.x, 2);
-      //   display->print(", ");
-      //   display->print(mpu_value.accel.y, 2);
-      //   display->print(", ");
-      //   display->print(mpu_value.accel.z, 2);
-      //   display->println("");
-
-      //   display->println("Gyroscope - rps");
-      //   display->print(mpu_value.gyro.x, 2);
-      //   display->print(", ");
-      //   display->print(mpu_value.gyro.y, 2);
-      //   display->print(", ");
-      //   display->print(mpu_value.gyro.z, 2);
-      //   display->println("");
-        
-      // }else{
-
-      //   display->println("Accelerometer - m/s^2");
-      //   display->print(mpu_value.accel.x, 1);
-      //   display->print(", ");
-      //   display->print(mpu_value.accel.y, 1);
-      //   display->print(", ");
-      //   display->print(mpu_value.accel.z, 1);
-      //   display->println("");
-
-      //   display->println("Gyroscope - rps");
-      //   display->print(mpu_value.gyro.x, 1);
-      //   display->print(", ");
-      //   display->print(mpu_value.gyro.y, 1);
-      //   display->print(", ");
-      //   display->print(mpu_value.gyro.z, 1);
-      //   display->println("");
-      // }
 
     }
 
@@ -208,10 +171,10 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
 
       if(current_UI->prev_UI != nullptr){
 
-        if(xSemaphoreTake(xMutex_start_robot_flag, portMAX_DELAY) == pdTRUE){
+        // if(xSemaphoreTake(xMutex_start_robot_flag, portMAX_DELAY) == pdTRUE){
           start_robot_flag= false;
-          xSemaphoreGive(xMutex_start_robot_flag);
-        }
+        //   xSemaphoreGive(xMutex_start_robot_flag);
+        // }
         
         current_UI = current_UI->prev_UI;
       }
@@ -488,7 +451,7 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
 
     void display_func(){
 
-      display->printf("Kd = %.2f\n", temp_PID_params.setpoint);
+      display->printf("Setpoint = %.2f\n", temp_PID_params.setpoint);
 
       display->println("-UP button: increase value");
       display->println("-DOWN button: increase value");
@@ -538,6 +501,7 @@ struct_PID_parameters temp_PID_params = {center_controller_PID_params.Kp,
 void create_all_ui(){
 
   // Creat MENU UI
+  Serial.println("Creating Menu UI");
   current_UI = new UI_tree(menu_ui.title, menu_ui.args, menu_ui.args_len, nullptr, menu_ui.nextUI_len, 
                             [](){menu_ui.display_func();}, 
                             [](){menu_ui.btnUP_func();}, 
@@ -545,6 +509,10 @@ void create_all_ui(){
                             [](){menu_ui.btnOK_func();}, 
                             [](){menu_ui.btnESC_func();});
   
+  if(current_UI != nullptr){
+    Serial.println("Creating Menu UI successfully");
+  }
+
   UI_tree* temp_ui = current_UI;
   
   // Create START AND PLOT UI at current_ui->nextUI[0]
@@ -702,8 +670,8 @@ void init_display(int scr_w, int scr_h){
 
   // Show initial display buffer contents on the screen --
   // the library initializes this with an Adafruit splash screen.
-  display->display();
-  delay(2000); // Pause for 2 seconds
+  // display->display();
+  // delay(2000); // Pause for 2 seconds
 
   // Clear the buffer
   display->clearDisplay();
@@ -804,17 +772,18 @@ void draw_menu(void* arg){
 
     display->setTextSize(1);             // Normal 1:1 pixel scale
     display->setTextColor(WHITE); // Draw white text
+    if(xSemaphoreTake(xMutex_menu_curr_opt, portMAX_DELAY) == pdTRUE){
+      if((current_UI->title.length()*6) >= display->width()){
+        display->setCursor(0,0); 
+      }else{
 
-    if((current_UI->title.length()*6) >= display->width()){
-      display->setCursor(0,0); 
-    }else{
-
-      display->setCursor((display->width()-current_UI->title.length()*6)/2,0); 
+        display->setCursor((display->width()-current_UI->title.length()*6)/2,0); 
+      }
+      display->print("-");
+      display->print(current_UI->title);
+      display->println("-");
+      xSemaphoreGive(xMutex_menu_curr_opt);
     }
-    display->print("-");
-    display->print(current_UI->title);
-    display->println("-");
-
 
     display->setTextSize(1);
     
@@ -837,35 +806,35 @@ void draw_menu(void* arg){
  */
 void menu_run(){
 
-  if(xTaskCreatePinnedToCore(get_btn_OK,"get_btn_OK", 2048, nullptr, 6, nullptr, 0) == pdPASS){
+  if(xTaskCreatePinnedToCore(get_btn_OK,"get_btn_OK", 2048, nullptr, 6, nullptr, 1) == pdPASS){
     Serial.println("Created get_btn_OK task successfully!");
   }else{
     Serial.println("Created get_btn_OK task failed!");
     while (true){}
     
   }
-  if(xTaskCreatePinnedToCore(get_btn_ESC,"get_btn_ESC", 2048, nullptr, 6, nullptr, 0) == pdPASS){
+  if(xTaskCreatePinnedToCore(get_btn_ESC,"get_btn_ESC", 2048, nullptr, 6, nullptr, 1) == pdPASS){
     Serial.println("Created get_btn_ESC task successfully!");
   }else{
     Serial.println("Created get_btn_ESC task failed!");
     while (true){}
     
   }
-  if(xTaskCreatePinnedToCore(get_btn_UP,"get_btn_UP", 2048, nullptr, 6, nullptr, 0) == pdPASS){
+  if(xTaskCreatePinnedToCore(get_btn_UP,"get_btn_UP", 2048, nullptr, 6, nullptr, 1) == pdPASS){
     Serial.println("Created get_btn_UP task successfully!");
   }else{
     Serial.println("Created get_btn_UP task failed!");
     while (true){}
     
   }
-  if(xTaskCreatePinnedToCore(get_btn_DOWN,"get_btn_DOWN", 2048, nullptr, 6, nullptr, 0) == pdPASS){
+  if(xTaskCreatePinnedToCore(get_btn_DOWN,"get_btn_DOWN", 2048, nullptr, 6, nullptr, 1) == pdPASS){
     Serial.println("Created get_btn_DOWN task successfully!");
   }else{
     Serial.println("Created get_btn_DOWN task failed!");
     while (true){}
     
   }
-  if(xTaskCreatePinnedToCore(draw_menu,"draw_menu", 2048, nullptr, 5, nullptr, 0) == pdPASS){
+  if(xTaskCreatePinnedToCore(draw_menu,"draw_menu", 2048, nullptr, 5, nullptr, 1) == pdPASS){
     Serial.println("Created draw_menu task successfully!");
   }else{
     Serial.println("Created draw_menu task failed!");
