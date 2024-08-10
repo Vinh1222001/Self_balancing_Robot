@@ -42,6 +42,5 @@ public:
     void push_new_UI(UI_tree* curr_UI, UI_tree* next_UI);
 };
 
-extern UI_tree* current_UI;
 
 #endif

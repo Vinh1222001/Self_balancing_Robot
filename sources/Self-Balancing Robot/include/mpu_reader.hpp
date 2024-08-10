@@ -6,21 +6,46 @@
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
 #include <Arduino.h>
+#include <global.hpp>
 
-extern Adafruit_MPU6050* mpu_reader;
+class mpu_reader
+{
+private:
 
-extern TaskHandle_t mpu_reader_task_handle;
+    const char* TAG = "MPU READER";
+    const float sample_time;
+    const uint8_t priority;
 
-struct struct_mpu_reader{
-    // float roll;
-    sensors_vec_t accel;
-    sensors_vec_t gyro;
+    Adafruit_MPU6050* mpu;
+    TaskHandle_t mpu_reader_task_handle;
+
+    struct{
+        QueueHandle_t queue;
+        struct_mpu_reader values;
+    } mpu_values;
+
+    Adafruit_Sensor *mpu_accel;
+    Adafruit_Sensor *mpu_gyro; 
+
+    void sensors_setup();
+
+    void mpu_reading();
+
+    static void mpu_reading_wrapper(void* arg);
+    
+public:
+
+    TaskHandle_t get_task_handle();
+
+    QueueHandle_t get_mpu_values_queue();
+
+    void run();
+    
+    mpu_reader(float sample_time = 0.01, uint8_t priority = 8);
+
+    ~mpu_reader();
 };
 
-extern QueueHandle_t q_mpu_values;
-
-void mpu_reader_init(void);
-
-void mpu_reader_run();
+extern mpu_reader mpu_reader_component;
 
 #endif
