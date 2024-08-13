@@ -11,8 +11,14 @@ void setup() {
   {
     delay(10);
   }
+
+  PID_block_component = new PID_block();
+  mpu_reader_component = new mpu_reader();
+  motor_controller_component = new motor_controller();
+  center_controller_component = new center_controller();
+  display_controller_component = new display_controller();
   
-  center_controller_component.run();
+  center_controller_component->run();
 
 }
 

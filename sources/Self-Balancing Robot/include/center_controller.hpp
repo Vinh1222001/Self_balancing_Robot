@@ -10,27 +10,6 @@
 #include "display_controller.hpp"
 #include "global.hpp"
 
-/*
-extern struct_PID_parameters center_controller_PID_params;
-
-extern SemaphoreHandle_t xMutex_PID_parameters;
-
-extern struct_eeprom_address eeprom_adresses;
-
-extern QueueHandle_t q_angle_values;
-
-extern struct_angle_values angle_values;
-
-extern bool start_robot_flag;
-
-extern SemaphoreHandle_t xMutex_start_robot_flag;
-
-void center_controller_init();
-
-void center_controller_run();
-
-*/
-
 class center_controller
 {
 private:
@@ -81,6 +60,6 @@ public:
     void run();
 };
 
-extern center_controller center_controller_component;
+extern center_controller* center_controller_component;
 
 #endif
